@@ -1,22 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpringBook</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-        h1 {
-            color: #4CAF50;
-        }
-    </style>
+  <title>Book Manager (with Status)</title>
 </head>
 <body>
-    <h1>SpringBook is Live 🚀</h1>
-    <p>Welcome to the deployed site on Netlify!</p>
+
+  <h2>Add Book</h2>
+  <input id="title" placeholder="Title" />
+  <input id="author" placeholder="Author" />
+  <input id="status" placeholder="Status" />
+  <button onclick="addBook()">Add Book</button>
+
+  <h2>Book List</h2>
+  <button onclick="loadBooks()">Refresh List</button>
+  <div id="bookList">No books yet.</div>
+
+  <script>
+    const apiUrl = 'https://stellar-vacherin-2e61b5.netlify.app/books';
+
+    async function addBook() {
+      const title = document.getElementById('title').value.trim();
+      const author = document.getElementById('author').value.trim();
+      const status = document.getElementById('status').value.trim();
+
+      if (!title || !author || !status) {
+        alert('Please enter title, author, and status');
+        return;
+      }
+
+      try {
+        const response = await fetch(apiUrl + '/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, author, status })
+        });
+
+        if (!response.ok) throw new Error('Failed to add book');
+
+        document.getElementById('title').value = '';
+        document.getElementById('author').value = '';
+        document.getElementById('status').value = '';
+        loadBooks();
+
+      } catch (err) {
+        alert('Error adding book');
+        console.error(err);
+      }
+    }
+
+    async function loadBooks() {
+      try {
+        const response = await fetch(apiUrl + '/list');
+        if (!response.ok) throw new Error('Failed to fetch books');
+        const books = await response.json();
+
+        if (books.length === 0) {
+          document.getElementById('bookList').innerText = 'No books yet.';
+          return;
+        }
+
+        document.getElementById('bookList').innerHTML = books
+          .map(book => `<div><strong>${book.title}</strong> by ${book.author} — Status: ${book.status}</div>`)
+          .join('');
+
+      } catch (err) {
+        document.getElementById('bookList').innerText = 'Error loading books';
+        console.error(err);
+      }
+    }
+
+    loadBooks();
+  </script>
+
 </body>
 </html>
